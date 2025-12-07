@@ -602,6 +602,7 @@ namespace Horizon.Plugin.UYA
         public bool grNewPlayerSync { get; set; }
         public byte grKothScoreLimit { get; set; }
         public byte grKothHillDuration { get; set; }
+        public int grSeed { get; set; }
         public bool prSurvivor { get; set; }
         public bool prChargebootForever { get; set; }
         public bool prLoadoutWeaponsOnly { get; set; }
@@ -610,8 +611,8 @@ namespace Horizon.Plugin.UYA
 
         public byte[] Serialize()
         {
-            // 41 bytes: isCustomMap + gr* (35) + pr* (5)
-            byte[] output = new byte[41];
+            // 45 bytes: isCustomMap + gr* (35 + seed int) + pr* (5)
+            byte[] output = new byte[45];
             using (var ms = new MemoryStream(output, true))
             {
                 using (var writer = new MessageWriter(ms))
@@ -653,6 +654,7 @@ namespace Horizon.Plugin.UYA
                     writer.Write(grCustomModeId != 0 ? grCustomModeId : GamemodeOverride);
                     writer.Write(grKothScoreLimit);
                     writer.Write(grKothHillDuration);
+                    writer.Write(grSeed);
                     writer.Write(prSurvivor);
                     writer.Write(prChargebootForever);
                     writer.Write(prLoadoutWeaponsOnly);
@@ -702,6 +704,7 @@ namespace Horizon.Plugin.UYA
             grCustomModeId = reader.ReadByte();
             grKothScoreLimit = reader.ReadByte();
             grKothHillDuration = reader.ReadByte();
+            grSeed = reader.ReadInt32();
             prSurvivor = reader.ReadBoolean();
             prChargebootForever = reader.ReadBoolean();
             prLoadoutWeaponsOnly = reader.ReadBoolean();
@@ -751,6 +754,7 @@ namespace Horizon.Plugin.UYA
                 && grNewPlayerSync == other.grNewPlayerSync
                 && grKothScoreLimit == other.grKothScoreLimit
                 && grKothHillDuration == other.grKothHillDuration
+                && grSeed == other.grSeed
                 && prSurvivor == other.prSurvivor
                 && prChargebootForever == other.prChargebootForever
                 && prLoadoutWeaponsOnly == other.prLoadoutWeaponsOnly
