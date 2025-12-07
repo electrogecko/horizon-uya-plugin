@@ -1,0 +1,157 @@
+diff --git a/Horizon.Plugin.UYA/Game.cs b/Horizon.Plugin.UYA/Game.cs
+index 3668257..d8b74f3 100644
+--- a/Horizon.Plugin.UYA/Game.cs
++++ b/Horizon.Plugin.UYA/Game.cs
+@@ -566,6 +566,7 @@ namespace Horizon.Plugin.UYA
+     public class GameConfig
+     {
+         public byte isCustomMap { get; set; }
++        public byte grCustomModeId { get; set; }
+         public byte GamemodeOverride { get; set; }
+         public byte grRadarBlipsDistance { get; set; }
+         public byte grRespawnTimer_Player { get; set; }
+@@ -597,7 +598,10 @@ namespace Horizon.Plugin.UYA
+         public byte grAllNodesTimer { get; set; }
+         public byte grNodeSelectTimer { get; set; }
+         public bool grSiegeNoTies { get; set; }
++        public bool grSiegeDominationNodes { get; set; }
+         public bool grNewPlayerSync { get; set; }
++        public byte grKothScoreLimit { get; set; }
++        public byte grKothHillDuration { get; set; }
+         public bool prSurvivor { get; set; }
+         public bool prChargebootForever { get; set; }
+         public bool prLoadoutWeaponsOnly { get; set; }
+@@ -606,13 +610,13 @@ namespace Horizon.Plugin.UYA
+ 
+         public byte[] Serialize()
+         {
+-            byte[] output = new byte[38];
++            // 41 bytes: isCustomMap + gr* (35) + pr* (5)
++            byte[] output = new byte[41];
+             using (var ms = new MemoryStream(output, true))
+             {
+                 using (var writer = new MessageWriter(ms))
+                 {
+                     writer.Write(isCustomMap);
+-                    writer.Write(GamemodeOverride);
+                     writer.Write(grRadarBlipsDistance);
+                     writer.Write(grRespawnTimer_Player);
+                     writer.Write(grRespawnInvicibility);
+@@ -643,7 +647,12 @@ namespace Horizon.Plugin.UYA
+                     writer.Write(grAllNodesTimer);
+                     writer.Write(grNodeSelectTimer);
+                     writer.Write(grSiegeNoTies);
++                    writer.Write(grSiegeDominationNodes);
+                     writer.Write(grNewPlayerSync);
++                    // custom mode id in gr* section; fall back to GamemodeOverride if not set
++                    writer.Write(grCustomModeId != 0 ? grCustomModeId : GamemodeOverride);
++                    writer.Write(grKothScoreLimit);
++                    writer.Write(grKothHillDuration);
+                     writer.Write(prSurvivor);
+                     writer.Write(prChargebootForever);
+                     writer.Write(prLoadoutWeaponsOnly);
+@@ -658,7 +667,6 @@ namespace Horizon.Plugin.UYA
+         public void Deserialize(MessageReader reader)
+         {
+             isCustomMap = reader.ReadByte();
+-            GamemodeOverride = reader.ReadByte();
+             grRadarBlipsDistance = reader.ReadByte();
+             grRespawnTimer_Player = reader.ReadByte();
+             grRespawnInvicibility = reader.ReadBoolean();
+@@ -689,17 +697,25 @@ namespace Horizon.Plugin.UYA
+             grAllNodesTimer = reader.ReadByte();
+             grNodeSelectTimer = reader.ReadByte();
+             grSiegeNoTies = reader.ReadBoolean();
++            grSiegeDominationNodes = reader.ReadBoolean();
+             grNewPlayerSync = reader.ReadBoolean();
++            grCustomModeId = reader.ReadByte();
++            grKothScoreLimit = reader.ReadByte();
++            grKothHillDuration = reader.ReadByte();
+             prSurvivor = reader.ReadBoolean();
+             prChargebootForever = reader.ReadBoolean();
+             prLoadoutWeaponsOnly = reader.ReadBoolean();
+             prGravityBombTweakers = reader.ReadBoolean();
+             prDisableDlStyleFlips = reader.ReadBoolean();
++
++            // keep legacy property in sync for existing usages
++            GamemodeOverride = grCustomModeId;
+         }
+ 
+         public bool SameAs(GameConfig other)
+         {
+             return isCustomMap == other.isCustomMap
++                && grCustomModeId == other.grCustomModeId
+                 && GamemodeOverride == other.GamemodeOverride
+                 && grRadarBlipsDistance == other.grRadarBlipsDistance
+                 && grRespawnTimer_Player == other.grRespawnTimer_Player
+@@ -731,7 +747,10 @@ namespace Horizon.Plugin.UYA
+                 && grAllNodesTimer == other.grAllNodesTimer
+                 && grNodeSelectTimer == other.grNodeSelectTimer
+                 && grSiegeNoTies == other.grSiegeNoTies
++                && grSiegeDominationNodes == other.grSiegeDominationNodes
+                 && grNewPlayerSync == other.grNewPlayerSync
++                && grKothScoreLimit == other.grKothScoreLimit
++                && grKothHillDuration == other.grKothHillDuration
+                 && prSurvivor == other.prSurvivor
+                 && prChargebootForever == other.prChargebootForever
+                 && prLoadoutWeaponsOnly == other.prLoadoutWeaponsOnly
+diff --git a/Horizon.Plugin.UYA/Modes.cs b/Horizon.Plugin.UYA/Modes.cs
+index d143c5f..21e8890 100644
+--- a/Horizon.Plugin.UYA/Modes.cs
++++ b/Horizon.Plugin.UYA/Modes.cs
+@@ -6,15 +6,16 @@ using System.Text;
+ 
+ namespace Horizon.Plugin.UYA
+ {
+-    public static class Modes
+-    {
+-        static readonly BaseCustomMode[] CustomModes = new BaseCustomMode[]
+-        {
+-            new SpleefCustomMode(),
+-            new InfectedCustomMode(),
+-            new JuggernaughtCustomMode(),
+-            new MidFlagCustomMode()
+-        };
++    public static class Modes
++    {
++        static readonly BaseCustomMode[] CustomModes = new BaseCustomMode[]
++        {
++            new SpleefCustomMode(),
++            new KothCustomMode(),
++            new InfectedCustomMode(),
++            new JuggernaughtCustomMode(),
++            new MidFlagCustomMode()
++        };
+ 
+         public static BaseCustomMode FindCustomModeById(CustomModeId id)
+         {
+@@ -23,15 +24,16 @@ namespace Horizon.Plugin.UYA
+ 
+     }
+ 
+-    public enum CustomModeId : sbyte
+-    {
+-        // custom mode ids
+-        CMODE_ID_MIDFLAG = 1,
+-        CMODE_ID_INFECTED = 2,
+-        CMODE_ID_JUGGERNAUGHT = 3,
+-
+-        // reserved for custom maps
+-        CMODE_ID_SPLEEF = -1,
+-    }
++    public enum CustomModeId : sbyte
++    {
++        // custom mode ids
++        CMODE_ID_MIDFLAG = 1,
++        CMODE_ID_INFECTED = 2,
++        CMODE_ID_JUGGERNAUGHT = 3,
++        CMODE_ID_KOTH = 4,
++
++        // reserved for custom maps
++        CMODE_ID_SPLEEF = -1,
++    }
+ 
+ }
+diff --git a/build.sh b/build.sh
+old mode 100644
+new mode 100755

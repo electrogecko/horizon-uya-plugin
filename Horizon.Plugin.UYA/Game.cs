@@ -597,7 +597,11 @@ namespace Horizon.Plugin.UYA
         public byte grAllNodesTimer { get; set; }
         public byte grNodeSelectTimer { get; set; }
         public bool grSiegeNoTies { get; set; }
+        public bool grSiegeDominationNodes { get; set; }
         public bool grNewPlayerSync { get; set; }
+        public byte grKothScoreLimit { get; set; }
+        public byte grKothHillDuration { get; set; }
+        public int grSeed { get; set; }
         public bool prSurvivor { get; set; }
         public bool prChargebootForever { get; set; }
         public bool prLoadoutWeaponsOnly { get; set; }
@@ -606,13 +610,13 @@ namespace Horizon.Plugin.UYA
 
         public byte[] Serialize()
         {
-            byte[] output = new byte[38];
+            // 45 bytes: isCustomMap + gr* (35 + seed int) + pr* (5)
+            byte[] output = new byte[45];
             using (var ms = new MemoryStream(output, true))
             {
                 using (var writer = new MessageWriter(ms))
                 {
                     writer.Write(isCustomMap);
-                    writer.Write(GamemodeOverride);
                     writer.Write(grRadarBlipsDistance);
                     writer.Write(grRespawnTimer_Player);
                     writer.Write(grRespawnInvicibility);
@@ -643,7 +647,13 @@ namespace Horizon.Plugin.UYA
                     writer.Write(grAllNodesTimer);
                     writer.Write(grNodeSelectTimer);
                     writer.Write(grSiegeNoTies);
+                    writer.Write(grSiegeDominationNodes);
                     writer.Write(grNewPlayerSync);
+                    // custom mode id in gr* section; fall back to GamemodeOverride if not set
+                    writer.Write(grCustomModeId != 0 ? grCustomModeId : GamemodeOverride);
+                    writer.Write(grKothScoreLimit);
+                    writer.Write(grKothHillDuration);
+                    writer.Write(grSeed);
                     writer.Write(prSurvivor);
                     writer.Write(prChargebootForever);
                     writer.Write(prLoadoutWeaponsOnly);
@@ -658,7 +668,6 @@ namespace Horizon.Plugin.UYA
         public void Deserialize(MessageReader reader)
         {
             isCustomMap = reader.ReadByte();
-            GamemodeOverride = reader.ReadByte();
             grRadarBlipsDistance = reader.ReadByte();
             grRespawnTimer_Player = reader.ReadByte();
             grRespawnInvicibility = reader.ReadBoolean();
@@ -689,17 +698,26 @@ namespace Horizon.Plugin.UYA
             grAllNodesTimer = reader.ReadByte();
             grNodeSelectTimer = reader.ReadByte();
             grSiegeNoTies = reader.ReadBoolean();
+            grSiegeDominationNodes = reader.ReadBoolean();
             grNewPlayerSync = reader.ReadBoolean();
+            grCustomModeId = reader.ReadByte();
+            grKothScoreLimit = reader.ReadByte();
+            grKothHillDuration = reader.ReadByte();
+            grSeed = reader.ReadInt32();
             prSurvivor = reader.ReadBoolean();
             prChargebootForever = reader.ReadBoolean();
             prLoadoutWeaponsOnly = reader.ReadBoolean();
             prGravityBombTweakers = reader.ReadBoolean();
             prDisableDlStyleFlips = reader.ReadBoolean();
+
+            // keep legacy property in sync for existing usages
+            GamemodeOverride = grCustomModeId;
         }
 
         public bool SameAs(GameConfig other)
         {
             return isCustomMap == other.isCustomMap
+                && grCustomModeId == other.grCustomModeId
                 && GamemodeOverride == other.GamemodeOverride
                 && grRadarBlipsDistance == other.grRadarBlipsDistance
                 && grRespawnTimer_Player == other.grRespawnTimer_Player
@@ -731,7 +749,11 @@ namespace Horizon.Plugin.UYA
                 && grAllNodesTimer == other.grAllNodesTimer
                 && grNodeSelectTimer == other.grNodeSelectTimer
                 && grSiegeNoTies == other.grSiegeNoTies
+                && grSiegeDominationNodes == other.grSiegeDominationNodes
                 && grNewPlayerSync == other.grNewPlayerSync
+                && grKothScoreLimit == other.grKothScoreLimit
+                && grKothHillDuration == other.grKothHillDuration
+                && grSeed == other.grSeed
                 && prSurvivor == other.prSurvivor
                 && prChargebootForever == other.prChargebootForever
                 && prLoadoutWeaponsOnly == other.prLoadoutWeaponsOnly
