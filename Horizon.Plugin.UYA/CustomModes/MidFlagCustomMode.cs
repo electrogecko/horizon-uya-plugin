@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace Horizon.Plugin.UYA.CustomModes
 {
-    public class DominationCustomMode : BaseCustomMode
+    public class MidFlagCustomMode : BaseCustomMode
     {
-        public override CustomModeId Id => CustomModeId.CMODE_ID_DOMINATION;
-        public override string Name => "Domination";
+        public override CustomModeId Id => CustomModeId.CMODE_ID_MIDFLAG;
+        public override string Name => "Mid-Flag";
 
         public override Task OnClientPostWideStats(OnPlayerWideStatsArgs args)
         {
@@ -37,7 +37,7 @@ namespace Horizon.Plugin.UYA.CustomModes
 
         public override Task<Payload> GetPayload(Server.Medius.Models.Game game, ClientObject client, GameMetadata metadata)
         {
-            var dataPath = Path.Combine(Plugin.WorkingDirectory, $"bin/patch/domination-{client.ApplicationId}.bin");
+            var dataPath = Path.Combine(Plugin.WorkingDirectory, $"bin/patch/midflag-{client.ApplicationId}.bin");
             if (File.Exists(dataPath))
                 return Task.FromResult(new Payload(0x000fa000, File.ReadAllBytes(dataPath)));
 

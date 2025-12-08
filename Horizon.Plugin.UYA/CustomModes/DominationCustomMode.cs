@@ -1,23 +1,18 @@
 ﻿using Server.Medius.Models;
 using Server.Medius.PluginArgs;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Horizon.Plugin.UYA.CustomModes
 {
-    public class MidFlagCustomMode : BaseCustomMode
+    public class DominationCustomMode : BaseCustomMode
     {
-        public override CustomModeId Id => CustomModeId.CMODE_ID_MIDFLAG;
-        public override string Name => "MidFlag";
+        public override CustomModeId Id => CustomModeId.CMODE_ID_DOMINATION;
+        public override string Name => "Domination";
 
         public override Task OnClientPostWideStats(OnPlayerWideStatsArgs args)
         {
-            // reject all
-            args.Reject = true;
+            // accept stats
             return Task.CompletedTask;
         }
 
@@ -37,7 +32,7 @@ namespace Horizon.Plugin.UYA.CustomModes
 
         public override Task<Payload> GetPayload(Server.Medius.Models.Game game, ClientObject client, GameMetadata metadata)
         {
-            var dataPath = Path.Combine(Plugin.WorkingDirectory, $"bin/patch/midflag-{client.ApplicationId}.bin");
+            var dataPath = Path.Combine(Plugin.WorkingDirectory, $"bin/patch/domination-{client.ApplicationId}.bin");
             if (File.Exists(dataPath))
                 return Task.FromResult(new Payload(0x000fa000, File.ReadAllBytes(dataPath)));
 
@@ -45,5 +40,4 @@ namespace Horizon.Plugin.UYA.CustomModes
             return Task.FromResult<Payload>(null);
         }
     }
-
 }

@@ -567,6 +567,7 @@ namespace Horizon.Plugin.UYA
     {
         public byte isCustomMap { get; set; }
         public byte GamemodeOverride { get; set; }
+        public byte grCustomModeId { get; set; }
         public byte grRadarBlipsDistance { get; set; }
         public byte grRespawnTimer_Player { get; set; }
         public bool grRespawnInvicibility { get; set; }
