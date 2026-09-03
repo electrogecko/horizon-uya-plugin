@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
 	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
 
   <ItemGroup>
 	  <PackageReference Include="DotNetty.Common" Version="0.7.6" />
@@ -12,11 +13,11 @@
 
   <ItemGroup>
     <Reference Include="RT.Common">
-      <HintPath>..\..\horizon-server\RT.Common\bin\Debug\netstandard2.0\RT.Common.dll</HintPath>
+      <HintPath>..\..\horizon-server\RT.Common\bin\Debug\net9.0\RT.Common.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="RT.Models">
-      <HintPath>..\..\horizon-server\RT.Models\bin\Debug\netstandard2.0\RT.Models.dll</HintPath>
+      <HintPath>..\..\horizon-server\RT.Models\bin\Debug\net9.0\RT.Models.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Server.Dme">
@@ -24,11 +25,11 @@
       <Private>false</Private>
     </Reference>
 	  <Reference Include="Server.Pipeline">
-		  <HintPath>..\..\horizon-server\Server.Pipeline\bin\Debug\netstandard2.0\Server.Pipeline.dll</HintPath>
+		  <HintPath>..\..\horizon-server\Server.Pipeline\bin\Debug\net9.0\Server.Pipeline.dll</HintPath>
 		  <Private>false</Private>
 	  </Reference>
     <Reference Include="Server.Plugins.Interface">
-      <HintPath>..\..\horizon-server\Server.Plugins.Interface\bin\Debug\netstandard2.0\Server.Plugins.Interface.dll</HintPath>
+      <HintPath>..\..\horizon-server\Server.Plugins.Interface\bin\Debug\net9.0\Server.Plugins.Interface.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

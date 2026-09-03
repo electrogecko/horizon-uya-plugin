@@ -1,4 +1,4 @@
-﻿using DotNetty.Common.Internal.Logging;
+using DotNetty.Common.Internal.Logging;
 using Horizon.Plugin.UYA.Messages;
 using RT.Common;
 using RT.Models;
@@ -393,8 +393,19 @@ namespace Horizon.Plugin.UYA
 
             if (report.WorldStatus == MediusWorldStatus.WorldActive && !report.GameName.StartsWith("[IG] "))
             {
-
-                report.GameName = "[IG] " + report.GameName;
+                if (report.GameName.Length >= 28)
+                {
+                    string namePart = report.GameName.Substring(0, 16).TrimEnd();
+                    string seedPart = report.GameName.Substring(16);
+                    string igName = ("[IG] " + namePart).PadRight(16);
+                    if (igName.Length > 16)
+                        igName = igName.Substring(0, 16);
+                    report.GameName = igName + seedPart;
+                }
+                else
+                {
+                    report.GameName = "[IG] " + report.GameName;
+                }
             }
             return Task.CompletedTask;
         }
